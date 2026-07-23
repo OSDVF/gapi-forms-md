@@ -179,6 +179,8 @@ export function parseMarkdown(markdown: string, formId: string): Schema$Form {
         }
         currentQuestion.choiceQuestion.options?.push({
           value: val,
+          goToAction: goToSectionId ? 'NEXT_SECTION' : undefined,
+          goToSectionId: goToSectionId,
         });
       }
       continue;
