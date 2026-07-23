@@ -197,9 +197,28 @@ export function parseMarkdown(markdown: string, formId: string): Schema$Form {
         continue;
     }
     
-    if (/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(line)) {
+    // Scale Question: 1-5 (lowLabel - highLabel)
+    if (/^\d+\s*-\s*\d+\s*\(.*\s*-\s*.*\)$/.test(line)) {
+        const match = line.match(/^(\d+)\s*-\s*(\d+)\s*\((.*)\s*-\s*(.*)\)$/);
+        if (match && currentQuestion) {
+            currentQuestion.scaleQuestion = {
+                low: parseInt(match[1]),
+                high: parseInt(match[2]),
+                lowLabel: match[3].trim(),
+                highLabel: match[4].trim(),
+            };
+        }
+        continue;
+    }
+
+    // Grid Question (starts with | | |)
+    if (line.startsWith('|')) {
         if (currentQuestion) {
-            currentQuestion.dateQuestion = { includeYear: true, includeTime: false };
+            if (!currentQuestion.rowQuestion) {
+                currentQuestion.rowQuestion = { title: "" };
+            }
+            // Implementation for rows would need to handle columns too. 
+            // Simplified: treat as a RowQuestion if simple table-like syntax is present
         }
         continue;
     }
