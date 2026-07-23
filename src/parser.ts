@@ -52,7 +52,8 @@ export function parseMarkdown(markdown: string, formId: string): Schema$Form {
   }
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
+    const line = lines[i]?.trim();
+    if (!line) continue;
 
     if (line === '---') {
       flushItem();
@@ -174,14 +175,16 @@ export function parseMarkdown(markdown: string, formId: string): Schema$Form {
         let goToSectionId: string | undefined;
         if (val.includes('->')) {
             const parts = val.split('->');
-            val = parts[0].trim();
-            goToSectionId = parts[1].trim();
+            val = parts[0]?.trim() || '';
+            goToSectionId = parts[1]?.trim();
         }
-        currentQuestion.choiceQuestion.options?.push({
-          value: val,
-          goToAction: goToSectionId ? 'NEXT_SECTION' : undefined,
-          goToSectionId: goToSectionId,
-        });
+        if (currentQuestion.choiceQuestion.options) {
+            currentQuestion.choiceQuestion.options.push({
+              value: val,
+              goToAction: goToSectionId ? 'NEXT_SECTION' : undefined,
+              goToSectionId: goToSectionId,
+            });
+        }
       }
       continue;
     }
@@ -200,7 +203,7 @@ export function parseMarkdown(markdown: string, formId: string): Schema$Form {
     // Scale Question: 1-5 (lowLabel - highLabel)
     if (/^\d+\s*-\s*\d+\s*\(.*\s*-\s*.*\)$/.test(line)) {
         const match = line.match(/^(\d+)\s*-\s*(\d+)\s*\((.*)\s*-\s*(.*)\)$/);
-        if (match && currentQuestion) {
+        if (match && match[1] && match[2] && match[3] && match[4] && currentQuestion) {
             currentQuestion.scaleQuestion = {
                 low: parseInt(match[1]),
                 high: parseInt(match[2]),
