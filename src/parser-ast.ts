@@ -15,11 +15,27 @@ export async function parseMarkdown(markdown: string, formId: string): Promise<f
   let formTitle = '';
   let formDescription = '';
 
-  let itemIdCounter = 0;
-  let questionIdCounter = 0;
+  // Deterministic ID generation based on title
+  const sectionIds = new Map<string, string>();
+  let nextSectionId = 0;
 
-  function genItemId() { return `item_${itemIdCounter++}`; }
-  function genQuestionId() { return `question_${questionIdCounter++}`; }
+  function getSectionId(title: string): string {
+    if (!sectionIds.has(title)) {
+      sectionIds.set(title, `section_${nextSectionId++}`);
+    }
+    return sectionIds.get(title)!;
+  }
+
+  // Pre-scan to map all sections to IDs first
+  visit(ast, (node) => {
+      if (node.type === 'heading' && (node as Heading).depth === 1) {
+          const text = (node.children[0] as any)?.value || '';
+          getSectionId(text);
+      }
+  });
+
+  function genItemId(title: string) { return `item_${getSectionId(title)}`; }
+  function genQuestionId(title: string) { return `question_${getSectionId(title)}`; }
 
   let currentQuestion: forms_v1.Schema$Question | null = null;
   let currentList: forms_v1.Schema$Option[] = [];
@@ -32,17 +48,16 @@ export async function parseMarkdown(markdown: string, formId: string): Promise<f
       if (heading.depth === 1) {
         if (!formTitle) {
           formTitle = text;
-          // Create an implicit starting pageBreakItem to catch default section navigation rules on page 1
-          items.push({ itemId: genItemId(), title: text, pageBreakItem: {} });
+          items.push({ itemId: genItemId(text), title: text, pageBreakItem: {} });
         } else {
-          items.push({ itemId: genItemId(), title: text, pageBreakItem: {} });
+          items.push({ itemId: genItemId(text), title: text, pageBreakItem: { } });
         }
       } else if (heading.depth === 2) {
         const required = text.endsWith('*');
         const title = required ? text.slice(0, -1).trim() : text;
-        const question: forms_v1.Schema$Question = { questionId: genQuestionId(), required };
+        const question: forms_v1.Schema$Question = { questionId: genQuestionId(title), required };
         items.push({
-          itemId: genItemId(),
+          itemId: genItemId(title),
           title,
           questionItem: { question }
         });
@@ -53,22 +68,17 @@ export async function parseMarkdown(markdown: string, formId: string): Promise<f
       const text = (p.children[0] as any)?.value || '';
       
       if (text.startsWith('->')) {
-        const destSection = text.replace('->', '').trim();
-        // Since first page break is implicitly the form header, 
-        // if no pageBreakItem exists yet, we create a navigation rule on the form header or wait.
-        // Let's set it on the preceding PageBreakItem or attach it contextually.
+        const destSectionTitle = text.replace('->', '').trim();
+        const destSectionId = getSectionId(destSectionTitle);
+        
         const pageBreaks = items.filter(item => !!item.pageBreakItem);
         if (pageBreaks.length > 0) {
             const pageBreak = pageBreaks[pageBreaks.length - 1];
             if (pageBreak) {
                 pageBreak.pageBreakItem = { 
-                    goToSectionId: destSection 
+                    goToSectionId: destSectionId 
                 };
             }
-        } else {
-            // No explicit section breaks yet (means we are on the first default page).
-            // In Google Forms, default navigation for page 1 is not easily represented unless we have an item.
-            // But we can store it as metadata on a dummy initial pageBreakItem if needed.
         }
       }
     } else if (node.type === 'list' && currentQuestion) {

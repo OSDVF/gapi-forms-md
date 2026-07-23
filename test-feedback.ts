@@ -1,4 +1,4 @@
-import { parseMarkdown } from './src/parser';
+import { parseMarkdown } from './src/parser-ast';
 import { readFile } from 'node:fs/promises';
 
 async function test() {
