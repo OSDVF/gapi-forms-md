@@ -1,4 +1,4 @@
-import { parseMarkdown } from './src/parser-ast';
+import { parseMarkdown } from './src/parser';
 import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
