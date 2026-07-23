@@ -30,9 +30,12 @@ export async function parseMarkdown(markdown: string, formId: string): Promise<f
       const text = (heading.children[0] as any)?.value || '';
 
       if (heading.depth === 1) {
-        if (!formTitle) formTitle = text;
-        else {
-            items.push({ itemId: genItemId(), title: text, pageBreakItem: {} });
+        if (!formTitle) {
+          formTitle = text;
+          // Create an implicit starting pageBreakItem to catch default section navigation rules on page 1
+          items.push({ itemId: genItemId(), title: text, pageBreakItem: {} });
+        } else {
+          items.push({ itemId: genItemId(), title: text, pageBreakItem: {} });
         }
       } else if (heading.depth === 2) {
         const required = text.endsWith('*');
@@ -44,6 +47,29 @@ export async function parseMarkdown(markdown: string, formId: string): Promise<f
           questionItem: { question }
         });
         currentQuestion = question;
+      }
+    } else if (node.type === 'paragraph') {
+      const p = node as Paragraph;
+      const text = (p.children[0] as any)?.value || '';
+      
+      if (text.startsWith('->')) {
+        const destSection = text.replace('->', '').trim();
+        // Since first page break is implicitly the form header, 
+        // if no pageBreakItem exists yet, we create a navigation rule on the form header or wait.
+        // Let's set it on the preceding PageBreakItem or attach it contextually.
+        const pageBreaks = items.filter(item => !!item.pageBreakItem);
+        if (pageBreaks.length > 0) {
+            const pageBreak = pageBreaks[pageBreaks.length - 1];
+            if (pageBreak) {
+                pageBreak.pageBreakItem = { 
+                    goToSectionId: destSection 
+                };
+            }
+        } else {
+            // No explicit section breaks yet (means we are on the first default page).
+            // In Google Forms, default navigation for page 1 is not easily represented unless we have an item.
+            // But we can store it as metadata on a dummy initial pageBreakItem if needed.
+        }
       }
     } else if (node.type === 'list' && currentQuestion) {
       const list = node as List;

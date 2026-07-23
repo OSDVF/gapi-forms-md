@@ -52,24 +52,77 @@ Returns the JSON representation of the form defined in `:formId.md`.
 
 Create a new form by adding a new `.md` file to the root directory.
 
-### Example Syntax
+### Question Types Syntax Reference
 
+You can define various Google Forms question types using standard Markdown syntax elements:
+
+#### 1. Page Break (Section)
+Use a Level 1 Heading to split the form into pages/sections.
 ```markdown
-# Form Title
-Form description.
-
-## Question Title*
-- [ ] Checkbox Option
-- [ ] Another Option
-...
+# Section Title
+Optional description text explaining this section.
 ```
 
-- `# ` : Form Title/Page Break.
-- `## ` : Question Title (add `*` for required).
-- `- [ ] ` : Checkbox.
-- `- ` : Radio button.
-- `...` : Text question.
-- `![Alt](URL)` : Image item.
+#### 2. Section Navigation (Go-To Sections)
+You can set up conditional logic to route respondents to specific sections depending on their answer in a multiple-choice selection. Use the `->` operator followed by the exact name of the destination section heading:
+```markdown
+## Do you want to customize your arrival date?*
+- Yes -> Arrival Details
+- No -> Consent
+```
+
+#### 3. Question Title & Required Status
+Use a Level 2 Heading for question titles. Appending an asterisk `*` marks the question as required.
+```markdown
+## Question Title*
+```
+
+#### 3. Short Text & Paragraph Questions
+Use `...` to specify a short-text field, or `... ...` to represent a paragraph / long-form text question.
+```markdown
+## What is your name?*
+...
+
+## Write your detailed feedback:
+... ...
+```
+
+#### 4. Multiple Choice & Dropdowns
+Use lists to define choice questions. Ordered lists automatically map to Dropdown menus, while standard unordered lists map to Radio button questions.
+```markdown
+## Select your package:
+- Basic
+- Premium
+- Enterprise
+
+## Pick a time slot:
+1. Morning
+2. Afternoon
+3. Evening
+```
+
+#### 5. Checkboxes
+Use task list elements to define a Checkbox (multiple select) question. Appending a colon `:` to an option identifies it as an "Other:" option.
+```markdown
+## What are your hobbies?
+- [ ] Sports
+- [ ] Music
+- [ ] Other:
+```
+
+#### 6. Linear Scale
+Define a linear numeric scale range followed by low and high bounds labels inside parentheses.
+```markdown
+## Rate your experience:
+1-5 (Terrible - Excellent)
+```
+
+#### 7. Images
+Include images using normal Markdown image links, which automatically attach to the active question.
+```markdown
+## Look at this graph and answer:
+![Chart](https://example.com/chart.png)
+```
 
 ## Syncing from Google Forms
 
