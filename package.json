@@ -1,8 +1,11 @@
 {
-  "name": "gapi-emulator",
+  "name": "gapi-forms-md",
+  "version": "0.1.0",
+  "main": "index.ts",
   "module": "index.ts",
   "type": "module",
-  "private": true,
+  "private": false,
+  "files": ["index.ts"],
   "scripts": {
     "start": "bun index.ts",
     "dev": "bun --watch index.ts"
