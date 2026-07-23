@@ -2,7 +2,7 @@ import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkGfm from 'remark-gfm';
 import { visit } from 'unist-util-visit';
-import { Root, Heading, List, ListItem, Paragraph, Image } from 'mdast';
+import type { Root, Heading, List, ListItem, Paragraph, Image } from 'mdast';
 import { forms_v1 } from '@googleapis/forms';
 
 export async function parseMarkdown(markdown: string, formId: string): Promise<forms_v1.Schema$Form> {
@@ -58,14 +58,19 @@ export async function parseMarkdown(markdown: string, formId: string): Promise<f
           let text = (li.children[0] as any)?.children?.[0]?.value || '';
           return { value: text.trim() };
       });
-      
+
       currentQuestion.choiceQuestion = {
           type: isCheckbox ? 'CHECKBOX' : (list.ordered ? 'DROP_DOWN' : 'RADIO'),
           options
       };
     } else if (node.type === 'image' && currentQuestion) {
         const img = node as Image;
-        currentQuestion.image = { contentUri: img.url };
+        // In the official Schema, 'image' belongs to QuestionItem, not Question
+        // We need to find the parent QuestionItem to set the image
+        const lastItem = items[items.length - 1];
+        if (lastItem && lastItem.questionItem) {
+            lastItem.questionItem.image = { contentUri: img.url };
+        }
     }
   });
 
