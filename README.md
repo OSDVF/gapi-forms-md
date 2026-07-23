@@ -38,6 +38,36 @@ bun run dev
 
 The server will be available at `http://localhost:3000`.
 
+CLI usage and data root
+
+By default the emulator serves Markdown files from the current working directory. To specify a different Markdown data root the server accepts:
+
+- CLI flag: `--data-root <path>` or `-d <path>`
+- Environment variable: `MARKDOWN_ROOT`
+
+Priority: CLI flag > MARKDOWN_ROOT > current working directory
+
+Examples:
+
+```bash
+# Serve markdowns from ./markdowns
+bun index.ts --data-root ./markdowns
+
+# Short flag
+bun index.ts -d ./markdowns
+
+# Using environment variable
+MARKDOWN_ROOT=/path/to/my-md bun index.ts
+
+# From a host project using the installed package
+bun ./node_modules/gapi-emulator/index.ts --data-root ./vendor/forms
+```
+
+The server validates the provided path at startup and will exit with an error if the path does not exist or is not a directory. If you need a quick help message, run:
+
+```bash
+bun index.ts --help
+```
 ## API Endpoints
 
 ### List all forms

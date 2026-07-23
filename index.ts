@@ -1,6 +1,7 @@
 import { parseMarkdown } from './src/parser';
 import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+import { existsSync, statSync } from 'node:fs';
 
 const PORT = process.env.PORT || 3000;
 const argv = process.argv.slice(2);
@@ -9,6 +10,33 @@ const argIndex = argv.findIndex(a => a === '--data-root' || a === '-d');
 if (argIndex !== -1 && argv[argIndex + 1]) {
   DATA_ROOT = resolve(argv[argIndex + 1]);
 }
+// --help / -h
+if (argv.includes('--help') || argv.includes('-h')) {
+  console.log('Usage: bun index.ts [--data-root|-d <path>]');
+  console.log('Environment variable: MARKDOWN_ROOT (optional)');
+  console.log('Examples:');
+  console.log('  bun index.ts --data-root ./markdowns');
+  console.log('  MARKDOWN_ROOT=/path/to/md bun index.ts');
+  process.exit(0);
+}
+
+// Validate DATA_ROOT exists and is a directory
+if (!existsSync(DATA_ROOT)) {
+  console.error(`Data root "${DATA_ROOT}" does not exist.`);
+  console.error('Specify a valid directory with --data-root or MARKDOWN_ROOT. Example: bun index.ts --data-root /path/to/markdowns');
+  process.exit(1);
+}
+try {
+  const st = statSync(DATA_ROOT);
+  if (!st.isDirectory()) {
+    console.error(`Data root "${DATA_ROOT}" is not a directory.`);
+    process.exit(1);
+  }
+} catch (e) {
+  console.error(`Unable to stat data root "${DATA_ROOT}": ${e}");
+  process.exit(1);
+}
+
 const RESPONSES_DIR = join(DATA_ROOT, 'responses');
 
 const server = Bun.serve({
@@ -93,4 +121,4 @@ const server = Bun.serve({
   },
 });
 
-console.log(`Server running at http://localhost:${server.port}`);
+console.log(`Server running at http://localhost:${server.port} (data root: ${DATA_ROOT})`);
