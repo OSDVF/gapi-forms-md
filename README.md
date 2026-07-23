@@ -47,20 +47,29 @@ By default the emulator serves Markdown files from the current working directory
 
 Priority: CLI flag > MARKDOWN_ROOT > current working directory
 
+Port selection
+
+You can select the port the server listens on using:
+
+- CLI flag: `--port <port>` or `-p <port>`
+- Environment variable: `PORT`
+
+Priority for port: CLI flag > PORT env var > default (3000)
+
 Examples:
 
 ```bash
-# Serve markdowns from ./markdowns
-bun index.ts --data-root ./markdowns
+# Serve markdowns from ./markdowns on port 4000
+bun index.ts --data-root ./markdowns --port 4000
 
-# Short flag
-bun index.ts -d ./markdowns
+# Short flags
+bun index.ts -d ./markdowns -p 4000
 
-# Using environment variable
-MARKDOWN_ROOT=/path/to/my-md bun index.ts
+# Using environment variables
+MARKDOWN_ROOT=/path/to/my-md PORT=4000 bun index.ts
 
 # From a host project using the installed package
-bun ./node_modules/gapi-emulator/index.ts --data-root ./vendor/forms
+bun ./node_modules/gapi-emulator/index.ts --data-root ./vendor/forms --port 4000
 ```
 
 The server validates the provided path at startup and will exit with an error if the path does not exist or is not a directory. If you need a quick help message, run:

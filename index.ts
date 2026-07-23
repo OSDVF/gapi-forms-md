@@ -3,20 +3,32 @@ import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { existsSync, statSync } from 'node:fs';
 
-const PORT = process.env.PORT || 3000;
+let PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const argv = process.argv.slice(2);
 let DATA_ROOT = process.env.MARKDOWN_ROOT || process.cwd();
 const argIndex = argv.findIndex(a => a === '--data-root' || a === '-d');
 if (argIndex !== -1 && argv[argIndex + 1]) {
-  DATA_ROOT = resolve(argv[argIndex + 1]);
+  DATA_ROOT = resolve(argv[argIndex + 1]!);
 }
+// --port / -p (CLI overrides env)
+const portIndex = argv.findIndex(a => a === '--port' || a === '-p');
+if (portIndex !== -1 && argv[portIndex + 1]) {
+  const p = parseInt(argv[portIndex + 1]!, 10);
+  if (Number.isNaN(p) || p <= 0) {
+    console.error(`Invalid port: ${argv[portIndex + 1]}`);
+    process.exit(1);
+  }
+  PORT = p;
+}
+
 // --help / -h
 if (argv.includes('--help') || argv.includes('-h')) {
-  console.log('Usage: bun index.ts [--data-root|-d <path>]');
-  console.log('Environment variable: MARKDOWN_ROOT (optional)');
+  console.log('Usage: bun index.ts [--data-root|-d <path>] [--port|-p <port>]');
+  console.log('Environment variables: MARKDOWN_ROOT, PORT (optional)');
   console.log('Examples:');
-  console.log('  bun index.ts --data-root ./markdowns');
-  console.log('  MARKDOWN_ROOT=/path/to/md bun index.ts');
+  console.log('  bun index.ts --data-root ./markdowns --port 4000');
+  console.log('  bun index.ts -d ./markdowns -p 4000');
+  console.log('  MARKDOWN_ROOT=/path/to/md PORT=4000 bun index.ts');
   process.exit(0);
 }
 
@@ -33,7 +45,7 @@ try {
     process.exit(1);
   }
 } catch (e) {
-  console.error(`Unable to stat data root "${DATA_ROOT}": ${e}");
+  console.error(`Unable to stat data root "${DATA_ROOT}": ${e}`);
   process.exit(1);
 }
 
