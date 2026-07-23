@@ -17,13 +17,13 @@ const server = Bun.serve({
       const formId = postResponseMatch[1];
       const response = await req.json();
       const responseId = `resp_${Date.now()}`;
-      
+
       await mkdir(join(RESPONSES_DIR, formId), { recursive: true });
       await writeFile(
         join(RESPONSES_DIR, formId, `${responseId}.json`),
         JSON.stringify({ ...(response as object), responseId }, null, 2)
       );
-      
+
       return Response.json({ responseId });
     }
 

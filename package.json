@@ -17,6 +17,7 @@
   "dependencies": {
     "@types/mdast": "^4.0.4",
     "@types/unist": "^3.0.3",
+    "googleapis": "^173.0.0",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "unified": "^11.0.5",
