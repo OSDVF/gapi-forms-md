@@ -1,9 +1,15 @@
 import { parseMarkdown } from './src/parser';
 import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 const PORT = process.env.PORT || 3000;
-const RESPONSES_DIR = join(process.cwd(), 'responses');
+const argv = process.argv.slice(2);
+let DATA_ROOT = process.env.MARKDOWN_ROOT || process.cwd();
+const argIndex = argv.findIndex(a => a === '--data-root' || a === '-d');
+if (argIndex !== -1 && argv[argIndex + 1]) {
+  DATA_ROOT = resolve(argv[argIndex + 1]);
+}
+const RESPONSES_DIR = join(DATA_ROOT, 'responses');
 
 const server = Bun.serve({
   port: PORT,
@@ -47,7 +53,7 @@ const server = Bun.serve({
       const formId = formMatch[1];
       const filename = `${formId}.md`;
       try {
-        const content = await readFile(join(process.cwd(), filename), 'utf-8');
+        const content = await readFile(join(DATA_ROOT, filename), 'utf-8');
         const form = await parseMarkdown(content, formId); // Updated to await AST parser
         return Response.json(form);
       } catch (e) {
@@ -70,10 +76,10 @@ const server = Bun.serve({
     // GET /v1/forms (List all forms - custom addition)
     if (path === '/v1/forms' && req.method === 'GET') {
       try {
-        const files = await readdir(process.cwd());
+        const files = await readdir(DATA_ROOT);
         const mdFiles = files.filter(f => f.endsWith('.md') && f !== 'README.md');
         const forms = await Promise.all(mdFiles.map(async f => {
-          const content = await readFile(join(process.cwd(), f), 'utf-8');
+          const content = await readFile(join(DATA_ROOT, f), 'utf-8');
           const formId = f.replace('.md', '');
           return await parseMarkdown(content, formId); // Updated to await AST parser
         }));
